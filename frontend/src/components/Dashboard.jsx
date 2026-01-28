@@ -3,6 +3,7 @@ import { useAuth } from '../App';
 import { Sparkles, TrendingUp, Zap, ArrowRight, Calendar, BarChart3, Trophy, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { strategyAPI } from '../api';
+import StratifyLogo from './StratifyLogo';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -40,14 +41,22 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto">
         
         {/* Hero Section */}
-        <div className="mb-12 animate-fade-in">
+        <div className="mb-12 animate-fade-in relative">
+          {/* Floating Logo - Top Left */}
+          <div className="absolute -top-4 -left-8 z-10">
+            <StratifyLogo size="xl" animated={true} />
+          </div>
+          
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-primary-600 via-accent-600 to-primary-600 bg-clip-text text-transparent mb-2 tracking-tight">
-                Welcome Back
+            <div className="pl-24">
+              <h1 className="text-5xl font-bold mb-3 tracking-tight text-gray-900 dark:text-white">
+                Watch 5 AI Research Agents{' '}
+                <span className="bg-gradient-to-r from-primary-600 via-accent-600 to-pink-600 bg-clip-text text-transparent">
+                  Build Your Strategy LIVE
+                </span>
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400">
-                Ready to generate your next winning strategy?
+              <p className="text-xl text-gray-600 dark:text-gray-300">
+                Stop reading AI reports. See academic-grade researchers collaborate in real-time
               </p>
             </div>
             {user?.tier !== 'pro' && (
@@ -65,9 +74,9 @@ export default function Dashboard() {
         {/* Stats Grid - Modern Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 animate-slide-up">
           {/* Total Strategies */}
-          <div className="relative group">
+          <div className="relative group stagger-fade-in">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
-            <div className="relative glass-card p-6 rounded-2xl">
+            <div className="relative glass-card glass-card-3d p-6 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-blue-500/10 rounded-xl">
                   <BarChart3 className="w-6 h-6 text-blue-500" />
@@ -85,9 +94,9 @@ export default function Dashboard() {
           </div>
 
           {/* This Month */}
-          <div className="relative group">
+          <div className="relative group stagger-fade-in">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
-            <div className="relative glass-card p-6 rounded-2xl">
+            <div className="relative glass-card glass-card-3d p-6 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-purple-500/10 rounded-xl">
                   <Calendar className="w-6 h-6 text-purple-500" />
@@ -107,9 +116,9 @@ export default function Dashboard() {
           </div>
 
           {/* Performance */}
-          <div className="relative group">
+          <div className="relative group stagger-fade-in">
             <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
-            <div className="relative glass-card p-6 rounded-2xl">
+            <div className="relative glass-card glass-card-3d p-6 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-green-500/10 rounded-xl">
                   <Zap className="w-6 h-6 text-green-500" />
@@ -154,7 +163,7 @@ export default function Dashboard() {
           <button
             onClick={() => navigate('/generate')}
             disabled={user?.tier !== 'pro' && stats.thisMonth >= 3}
-            className="relative w-full glass-card p-8 rounded-3xl text-left transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="relative w-full glass-card glass-card-3d btn-3d p-8 rounded-3xl text-left transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">

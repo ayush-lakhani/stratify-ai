@@ -2,6 +2,9 @@ import { Sparkles, Menu, User, LogOut, Home, Clock, Moon, Sun } from 'lucide-rea
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../App';
+import StratifyLogo from './StratifyLogo'; // MinimalPulseLogo by default
+// You can also import: MinimalPulseLogo, HexagonLogo, GradientOrbLogo, SpinningRingLogo
+
 
 export default function Navbar({ darkMode, toggleDarkMode }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -28,7 +31,10 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand */}
           <Link to="/dashboard" className="flex items-center gap-3 group">
-            <img src="/logo.png" alt="Stratify Logo" className="h-10 w-auto flex-shrink-0 transition-transform group-hover:scale-110" style={{filter: 'brightness(1.1)'}} />
+            <StratifyLogo size="md" animated={true} />
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
+              Stratify.ai
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

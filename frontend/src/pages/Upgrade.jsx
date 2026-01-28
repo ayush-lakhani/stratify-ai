@@ -94,7 +94,7 @@ export default function UpgradePage() {
             </div>
             <button
               onClick={() => navigate('/dashboard')}
-              className="mt-8 w-full btn-gradient py-4 text-lg font-bold"
+              className="mt-8 w-full btn-gradient btn-3d py-4 text-lg font-bold"
             >
               Go to Dashboard →
             </button>

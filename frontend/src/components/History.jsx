@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Trash2, Eye } from 'lucide-react';
+import { ArrowLeft, Clock, Trash2, Eye, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { strategyAPI } from '../api';
 import { format } from 'date-fns';
 import StrategyResults from './StrategyResults';
@@ -43,6 +43,18 @@ export default function History() {
       setSelectedStrategy(response.data);
     } catch (error) {
       console.error('Failed to load strategy:', error);
+    }
+  };
+
+  const handleFeedback = async (id, rating) => {
+    try {
+      await strategyAPI.submitFeedback(id, rating);
+      // Update local state
+      setStrategies(strategies.map(s => 
+        s.id === id ? { ...s, feedback_rating: rating } : s
+      ));
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
     }
   };
 
@@ -145,6 +157,29 @@ export default function History() {
                   </div>
                   
                   <div className="flex gap-2">
+                    {/* Feedback Buttons */}
+                    <button
+                      onClick={() => handleFeedback(strategy.id, 'up')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        strategy.feedback_rating === 'up'
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-green-100 dark:hover:bg-green-900'
+                      }`}
+                      title="Good strategy"
+                    >
+                      <ThumbsUp className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleFeedback(strategy.id, 'down')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        strategy.feedback_rating === 'down'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900'
+                      }`}
+                      title="Needs improvement"
+                    >
+                      <ThumbsDown className="w-5 h-5" />
+                    </button>
                     <button
                       onClick={() => handleView(strategy.id)}
                       className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"

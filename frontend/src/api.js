@@ -37,6 +37,7 @@ export const strategyAPI = {
   getHistory: () => api.get('/api/history'),
   getById: (id) => api.get(`/api/strategy/${id}`),
   delete: (id) => api.delete(`/api/strategy/${id}`),
+  submitFeedback: (strategyId, rating) => api.post('/feedback', { strategy_id: strategyId, rating }),
 };
 
 export default api;

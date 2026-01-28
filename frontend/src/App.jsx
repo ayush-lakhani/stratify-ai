@@ -8,6 +8,7 @@ import Generate from './components/Generate';
 import History from './components/History';
 import Navbar from './components/Navbar';
 import Upgrade from './pages/Upgrade';
+import Profile from './pages/Profile';
 import { authAPI } from './api';
 
 // Auth Context
@@ -174,6 +175,10 @@ function App() {
             <Route 
               path="/upgrade" 
               element={user ? <Upgrade /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/profile" 
+              element={user ? <Profile /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/" 

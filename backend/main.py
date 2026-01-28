@@ -18,12 +18,12 @@ import os
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 from bson import ObjectId
-# from dotenv import load_dotenv # Not needed - FastAPI handles env vars
+from dotenv import load_dotenv # Added for loading environment variables
 
-# Rate Limiting - TEMPORARILY DISABLED FOR DEPLOYMENT
-# from slowapi import Limiter, _rate_limit_exceeded_handler
-# from slowapi.util import get_remote_address
-# from slowapi.errors import RateLimitExceeded
+# Rate Limiting
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Razorpay for Payments
 import razorpay
@@ -34,13 +34,12 @@ import uuid
 from fastapi import BackgroundTasks
 from fastapi.responses import StreamingResponse
 
-# Import CrewAI - TEMPORARILY DISABLED FOR DEPLOYMENT
-# try:
-#     from crew import create_content_strategy_crew
-#     CREW_AI_ENABLED = bool(os.getenv("GROQ_API_KEY"))
-# except:
-#     CREW_AI_ENABLED = False
-CREW_AI_ENABLED = False  # Disabled until CrewAI dependency is resolved
+# Import CrewAI (comment out for demo mode without GROQ_API_KEY)
+try:
+    from crew import create_content_strategy_crew
+    CREW_AI_ENABLED = bool(os.getenv("GROQ_API_KEY"))
+except:
+    CREW_AI_ENABLED = False
 
 # ============================================================================
 # CONFIGURATION
@@ -782,6 +781,141 @@ async def get_referral_code(current_user: dict = Depends(get_current_user)):
         "share_url": f"https://stratify.ai/signup?ref={referral_code}",
         "message": "Share this link to earn free Pro access!"
     }
+
+
+# ============================================================================
+# PROFILE ENDPOINTS
+# ============================================================================
+
+@app.get("/profile")
+async def get_profile(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get user profile information"""
+    try:
+        # Verify token
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Get user from database
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Count strategies for this user
+        total_strategies = strategies_collection.count_documents({"user_id": user_id})
+        
+        # Get monthly usage from Redis
+        usage_month = 0
+        if REDIS_ENABLED:
+            try:
+                current_month = datetime.now().strftime("%Y-%m")
+                count_key = f"strategy_count:{user_id}:{current_month}"
+                current_val = redis_client.get(count_key)
+                usage_month = int(current_val) if current_val else 0
+            except:
+                pass
+        
+        return {
+            "name": user.get("name", user["email"].split("@")[0]),
+            "email": user["email"],
+            "tier": user.get("tier", "free"),
+            "usage_month": usage_month,
+            "total_strategies": total_strategies,
+            "photo": user.get("photo", None)
+        }
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        print(f"❌ Profile fetch error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/profile")
+async def update_profile(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Update user profile"""
+    try:
+        # Verify token
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Get update data
+        data = await request.json()
+        update_fields = {}
+        
+        if "name" in data:
+            update_fields["name"] = data["name"]
+        if "photo" in data:
+            update_fields["photo"] = data["photo"]
+        
+        # Update user
+        users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_fields}
+        )
+        
+        return {"success": True, "message": "Profile updated successfully"}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        print(f"❌ Profile update error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# FEEDBACK ENDPOINT (VenturusAI Response)
+# ============================================================================
+
+@app.post("/feedback")
+async def submit_feedback(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Submit feedback (thumbs up/down) on a strategy"""
+    try:
+        # Verify token
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Get feedback data
+        data = await request.json()
+        strategy_id = data.get("strategy_id")
+        rating = data.get("rating")  # "up" or "down"
+        comment = data.get("comment", "")
+        
+        # Update strategy with feedback
+        strategies_collection.update_one(
+            {"_id": ObjectId(strategy_id), "user_id": user_id},
+            {
+                "$set": {
+                    "feedback_rating": rating,
+                    "feedback_comment": comment,
+                    "feedback_date": datetime.utcnow()
+                }
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": "Feedback submitted successfully"
+        }
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        print(f"❌ Feedback error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
